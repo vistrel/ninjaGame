@@ -51,6 +51,7 @@ public:
         y += dy*time;
         speed = 0;
         mSprite.setPosition(x, y);
+        interactionWithMap();
     }
     
     float getPlayerCoordinateX() {
@@ -59,6 +60,39 @@ public:
     float getPlayerCoordinateY() {
         return y;
     }
+    
+    void interactionWithMap()
+        {
+     
+                for (int i = y / 32; i < (y + h2) / 32; i++)
+                for (int j = x / 32; j<(x + w2) / 32; j++)
+                {
+                    if (TileMap[i][j] == '0')//если наш квадратик соответствует символу 0 (стена), то проверяем "направление скорости" персонажа:
+                    {
+                        if (dy>0)//если мы шли вниз,
+                        {
+                            y = i * 32 - h2;
+                        }
+                        if (dy<0)
+                        {
+                            y = i * 32 + 32;//аналогично с ходьбой вверх. dy<0, значит мы идем вверх (вспоминаем координаты паинта)
+                        }
+                        if (dx>0)
+                        {
+                            x = j * 32 - w2;
+                        }
+                        if (dx < 0)
+                        {
+                            x = j * 32 + 32;//аналогично идем влево
+                        }
+                    }
+     
+                    if (TileMap[i][j] == 's') { //если символ равен 's' (камень)
+                        //какое то действие... например телепортация героя
+                        TileMap[i][j] = ' ';//убираем камень, типа взяли бонус. можем и не убирать, кстати.
+                    }
+                }
+        }
 };
 
 int main()
@@ -145,6 +179,12 @@ int main()
                 getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
                 //mSprite.move(0, speed*time);
             }
+            if(event.key.code == Keyboard::LAlt) {
+                view.zoom(1.0400f);
+            }
+            if(event.key.code == Keyboard::LControl) {
+                view.zoom(0.9600f);
+            }
         }
         p1.update(time);
         
@@ -155,7 +195,7 @@ int main()
        // }
         
 
-        window.clear();
+        window.clear(Color(128, 106, 89));
         
         // RISUNOK MAP
         for(int i = 0; i < HEIGHT_MAP; i++) {

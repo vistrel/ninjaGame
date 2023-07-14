@@ -15,7 +15,22 @@ using namespace sf;
 sf::View view;
 
 View getPlayerCoordinateForView(float x, float y) {
-    view.setCenter(x+100, y);
+    
+    float tempX = x; float tempY = y;
+    if(x < 320) {
+        tempX = 320;
+    }
+    if(x > 960) {
+        tempX = 960;
+    }
+    if(y < 240) {
+        tempY = 240;
+    }
+    if(y > 554) {
+        tempY = 554;
+    }
+    view.setCenter(tempX, tempY);
+    
     return view;
 }
 
