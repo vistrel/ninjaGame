@@ -1,14 +1,16 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
+#include <sstream>
 #include "map.h" //map
 #include "view.h" //camera
 using namespace sf;
+using namespace std;
 
 class Player {
 private: float x, y = 0;
 public:
     float speed = 0, w1, h1, w2, h2, dx, dy;
-    int dir = 0;
+    int dir = 0; int playerScore = 0;
     String File;
     Image image;
     Texture mTexture;
@@ -88,8 +90,8 @@ public:
                     }
      
                     if (TileMap[i][j] == 's') { //если символ равен 's' (камень)
-                        //какое то действие... например телепортация героя
-                        TileMap[i][j] = ' ';//убираем камень, типа взяли бонус. можем и не убирать, кстати.
+                        playerScore++;
+                        TileMap[i][j] = ' '; //убираем камень, типа взяли бонус. можем и не убирать, кстати.
                     }
                 }
         }
@@ -99,6 +101,16 @@ int main()
 {
     RenderWindow window(VideoMode(1280, 720), L"Беговой Бибиджон!");
     view.reset(FloatRect(0, 0, 640, 480));
+    
+    
+    // text
+    Font font;
+    font.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/sansation.ttf");
+    Text text("", font, 20);
+    text.setFillColor(Color::White);
+    text.setOutlineColor(Color::Black);
+    text.setOutlineThickness(2);
+    text.setStyle(Text::Bold);
     
     // map
     Image map_image;
@@ -116,6 +128,8 @@ int main()
     
     Player p1("anima.png", 200, 340, 128, 768, 128, 128);
     
+    
+    
     Clock clock;
     float Frame = 0;
     
@@ -123,7 +137,7 @@ int main()
     {
         float time = clock.getElapsedTime().asMicroseconds();
         clock.restart();
-        time = time/60;
+        time = time/1800;
         Event event;
         while (window.pollEvent(event))
         {
@@ -134,7 +148,6 @@ int main()
         // клавиатура
         if (event.type == Event::KeyPressed)
         {
-            
             if(event.key.code == Keyboard::Right) {
                 p1.dir = 0; p1.speed = 0.5;
                 std::cout << "\nRight";
@@ -180,10 +193,10 @@ int main()
                 //mSprite.move(0, speed*time);
             }
             if(event.key.code == Keyboard::LAlt) {
-                view.zoom(1.0400f);
+                view.zoom(1.0005f);
             }
             if(event.key.code == Keyboard::LControl) {
-                view.zoom(0.9600f);
+                view.zoom(0.9995f);
             }
         }
         p1.update(time);
@@ -216,6 +229,14 @@ int main()
             }
         }
         
+        
+        // text
+        ostringstream playerScoreString;
+        playerScoreString << p1.playerScore;
+        text.setString("Points: " + playerScoreString.str());
+        text.setPosition(view.getCenter().x-300, view.getCenter().y-220);
+        
+        window.draw(text);
         window.draw(p1.mSprite);
         window.setView(view);
         window.display();
