@@ -10,12 +10,15 @@ class Player {
 private: float x, y = 0;
 public:
     float speed = 0, w1, h1, w2, h2, dx, dy;
-    int dir = 0; int playerScore = 0;
+    int dir; int playerScore; int health;
+    bool life;
     String File;
     Image image;
     Texture mTexture;
     Sprite mSprite;
     Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
+        dir = 0; playerScore = 0; health = 100;
+        life = true;
         File = F;
         w1 = W1;
         h1 = H1;
@@ -30,22 +33,13 @@ public:
     void update(float time) {
         switch (dir) {
             case 0:
-                dx = speed;
-                dy = 0;
-                break;
+                dx = speed; dy = 0; break;
             case 1:
-                dx = -speed;
-                dy = 0;
-                break;
+                dx = -speed; dy = 0; break;
             case 2:
-                dx = 0;
-                dy = speed;
-                break;
+                dx = 0; dy = speed; break;
             case 3:
-                dx = 0;
-                dy = -speed;
-                break;
-                
+                dx = 0; dy = -speed; break;
             default:
                 break;
         }
@@ -54,6 +48,9 @@ public:
         speed = 0;
         mSprite.setPosition(x, y);
         interactionWithMap();
+        if(health <= 0) {
+            life = false;
+        }
     }
     
     float getPlayerCoordinateX() {
@@ -91,7 +88,17 @@ public:
      
                     if (TileMap[i][j] == 's') { //если символ равен 's' (камень)
                         playerScore++;
-                        TileMap[i][j] = ' '; //убираем камень, типа взяли бонус. можем и не убирать, кстати.
+                        TileMap[i][j] = ' '; //убираем камень
+                    }
+                    if (TileMap[i][j] == 'f') { //если символ равен 'h' (камень)
+                        cout << "\n-40 HP;";
+                        health -= 40;
+                        TileMap[i][j] = ' '; //убираем
+                    }
+                    if (TileMap[i][j] == 'h') { //если символ равен 'f' (камень)
+                        cout << "\n+20 HP;";
+                        health += 20;
+                        TileMap[i][j] = ' '; //убираем
                     }
                 }
         }
@@ -112,13 +119,36 @@ int main()
     text.setOutlineThickness(2);
     text.setStyle(Text::Bold);
     
+    // text
+    Text textHP("", font, 20);
+    textHP.setFillColor(Color::White);
+    textHP.setOutlineColor(Color::Black);
+    textHP.setOutlineThickness(2);
+    textHP.setStyle(Text::Bold);
+    
     // map
     Image map_image;
-    map_image.loadFromFile("/Users/vladislav/Desktop/ghgh/ghgh/image/map.png");
+    map_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/map.png");
     Texture map;
     map.loadFromImage(map_image);
     Sprite sMap;
     sMap.setTexture(map);
+    
+    // health
+    Image health_image;
+    health_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/health.png");
+    Texture hp;
+    hp.loadFromImage(health_image);
+    Sprite sHp;
+    sHp.setTexture(hp);
+    
+    // stone
+    Image stone_image;
+    stone_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/stone.png");
+    Texture tStone;
+    tStone.loadFromImage(stone_image);
+    Sprite sStone;
+    sStone.setTexture(tStone);
     
     //Image icon;
     //icon.loadFromFile("image/ninja.png");
@@ -129,7 +159,6 @@ int main()
     Player p1("anima.png", 200, 340, 128, 768, 128, 128);
     
     
-    
     Clock clock;
     float Frame = 0;
     
@@ -138,6 +167,9 @@ int main()
         float time = clock.getElapsedTime().asMicroseconds();
         clock.restart();
         time = time/1800;
+        
+        if(!p1.life) { view.zoom(0.99990); }
+        
         Event event;
         while (window.pollEvent(event))
         {
@@ -146,13 +178,13 @@ int main()
         }
         
         // клавиатура
-        if (event.type == Event::KeyPressed)
+        if (event.type == Event::KeyPressed && p1.life == true)
         {
             if(event.key.code == Keyboard::Right) {
                 p1.dir = 0; p1.speed = 0.5;
-                std::cout << "\nRight";
                 Frame += 0.031*time;
                 if(Frame > 7) {
+                    std::cout << "\nRight";
                     Frame -= 3;
                 }
                 p1.mSprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
@@ -161,10 +193,10 @@ int main()
             }
             if(event.key.code == Keyboard::Left) {
                 p1.dir = 1; p1.speed = 0.5;
-                std::cout << "\nLeft";
                 Frame += 0.031*time;
                 if(Frame > 7) {
                     Frame -= 3;
+                    std::cout << "\nLeft";
                 }
                 p1.mSprite.setTextureRect(IntRect(128*int(Frame), 0, 128, 128));
                 getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
@@ -172,9 +204,9 @@ int main()
             }
             if(event.key.code == Keyboard::Up) {
                 p1.dir = 3; p1.speed = 0.5;
-                std::cout << "\nUp";
                 Frame += 0.031*time;
                 if(Frame > 7) {
+                    std::cout << "\nUp";
                     Frame -= 3;
                 }
                 p1.mSprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
@@ -183,9 +215,9 @@ int main()
             }
             if(event.key.code == Keyboard::Down) {
                 p1.dir = 2; p1.speed = 0.5;
-                std::cout << "\nDown";
                 Frame += 0.031*time;
                 if(Frame > 7) {
+                    std::cout << "\nDown";
                     Frame -= 3;
                 }
                 p1.mSprite.setTextureRect(IntRect(128*int(Frame), 768, 128, 128));
@@ -194,9 +226,11 @@ int main()
             }
             if(event.key.code == Keyboard::LAlt) {
                 view.zoom(1.0005f);
+                std::cout << "\n-zoom";
             }
             if(event.key.code == Keyboard::LControl) {
                 view.zoom(0.9995f);
+                std::cout << "\n+Zoom";
             }
         }
         p1.update(time);
@@ -222,21 +256,37 @@ int main()
                 if (TileMap[i][j] == '0') {
                     sMap.setTextureRect(IntRect(64, 0, 32, 32));
                 }
+                if (TileMap[i][j] == 'f') {
+                    sStone.setTextureRect(IntRect(0, 0, 32, 32));
+                    window.draw(sStone);
+                }
+                if (TileMap[i][j] == 'h') {
+                    sHp.setTextureRect(IntRect(0, 0, 32, 32));
+                    window.draw(sHp);
+                }
                 
+                sStone.setPosition(j*32, i*32);
+                sHp.setPosition(j*32, i*32);
                 sMap.setPosition(j*32, i*32);
                 
                 window.draw(sMap);
             }
+            
         }
         
         
         // text
         ostringstream playerScoreString;
+        ostringstream playerHealthString;
         playerScoreString << p1.playerScore;
+        playerHealthString << p1.health;
         text.setString("Points: " + playerScoreString.str());
         text.setPosition(view.getCenter().x-300, view.getCenter().y-220);
+        textHP.setString("Health: " + playerHealthString.str());
+        textHP.setPosition(view.getCenter().x-300, view.getCenter().y-190);
         
         window.draw(text);
+        window.draw(textHP);
         window.draw(p1.mSprite);
         window.setView(view);
         window.display();
