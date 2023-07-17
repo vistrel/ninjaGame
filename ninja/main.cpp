@@ -3,6 +3,7 @@
 #include <sstream>
 #include "map.h" //map
 #include "view.h" //camera
+#include "mission.h" //mission
 using namespace sf;
 using namespace std;
 

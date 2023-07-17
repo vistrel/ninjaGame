@@ -16,6 +16,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8671F8A72A65E10C00F5771E /* mission.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mission.h; sourceTree = "<group>"; };
 		86AB20092A60ACB000963913 /* view.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = view.h; sourceTree = "<group>"; };
 		86AB200A2A60ACBA00963913 /* map.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = map.h; sourceTree = "<group>"; };
 		86DCFFC12A5FFCF400C18F6A /* ninja.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ninja.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -61,8 +62,9 @@
 			children = (
 				86AB200A2A60ACBA00963913 /* map.h */,
 				86AB20092A60ACB000963913 /* view.h */,
-				86DCFFC62A5FFCF400C18F6A /* ResourcePath.mm */,
+				8671F8A72A65E10C00F5771E /* mission.h */,
 				86DCFFC82A5FFCF400C18F6A /* ResourcePath.hpp */,
+				86DCFFC62A5FFCF400C18F6A /* ResourcePath.mm */,
 				86DCFFC92A5FFCF400C18F6A /* main.cpp */,
 				86DCFFCB2A5FFCF400C18F6A /* Resources */,
 				86DCFFC42A5FFCF400C18F6A /* Supporting Files */,
