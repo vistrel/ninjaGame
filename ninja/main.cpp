@@ -113,7 +113,7 @@ int main()
     
     // text
     Font font;
-    font.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/sansation.ttf");
+    font.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/Zhizn.otf");
     Text text("", font, 20);
     text.setFillColor(Color::White);
     text.setOutlineColor(Color::Black);
@@ -126,6 +126,13 @@ int main()
     textHP.setOutlineColor(Color::Black);
     textHP.setOutlineThickness(2);
     textHP.setStyle(Text::Bold);
+    
+    // text textPoints
+    Text textPoints("", font, 20);
+    textPoints.setFillColor(Color::White);
+    textPoints.setOutlineColor(Color::Black);
+    textPoints.setOutlineThickness(2);
+    textPoints.setStyle(Text::Bold);
     
     // map
     Image map_image;
@@ -151,6 +158,17 @@ int main()
     Sprite sStone;
     sStone.setTexture(tStone);
     
+    // mission
+    Image mission_image;
+    mission_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/missionbg.jpg");
+    mission_image.createMaskFromColor(Color(0, 0, 0));
+    Texture tMission;
+    tMission.loadFromImage(mission_image);
+    Sprite sMission;
+    sMission.setTexture(tMission);
+    sMission.setTextureRect(IntRect(0, 0, 340, 510));
+    sMission.setScale(0.6f, 0.6f);
+    
     //Image icon;
     //icon.loadFromFile("image/ninja.png");
     //mSprite.setTextureRect(IntRect(0, 540, 128, 128));
@@ -159,6 +177,7 @@ int main()
     
     Player p1("anima.png", 200, 340, 128, 768, 128, 128);
     
+    bool showMissionText = true;
     
     Clock clock;
     float Frame = 0;
@@ -167,74 +186,101 @@ int main()
     {
         float time = clock.getElapsedTime().asMicroseconds();
         clock.restart();
-        time = time/1800;
+        time = time/100;
         
-        if(!p1.life) { view.zoom(0.99990); }
+        if(!p1.life) { view.zoom(0.99992); }
         
         Event event;
         while (window.pollEvent(event))
         {
             if (event.type == Event::Closed)
                 window.close();
+            
+            
+            // клавиатура
+            if (event.type == Event::KeyPressed && p1.life == true) {
+                if(event.key.code == Keyboard::Right) {
+                    p1.dir = 0; p1.speed = 1;
+                    Frame += 0.031*time;
+                    if(Frame > 7) {
+                        std::cout << "\nRight";
+                        Frame -= 3;
+                    }
+                    p1.mSprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
+                    getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
+                    //mSprite.move(speed*time, 0);
+                }
+                
+                if(event.key.code == Keyboard::Tab) {
+                    
+                    switch (showMissionText) {
+                        case true: {
+                            ostringstream task;
+                            task << getTextMission(getCurrentMission(p1.getPlayerCoordinateX()));
+                            text.setString(task.str());
+                            text.setPosition(view.getCenter().x + 125, view.getCenter().y - 130);
+                            sMission.setPosition(view.getCenter().x + 115, view.getCenter().y - 130);
+                            showMissionText = false;
+                            break;
+                        }
+                        case false: {
+                            text.setString("");
+                            showMissionText = true;
+                            break;
+                        }
+                    }
+                    
+                }
+                
+                if(event.key.code == Keyboard::Left) {
+                    p1.dir = 1; p1.speed = 1;
+                    Frame += 0.031*time;
+                    if(Frame > 7) {
+                        Frame -= 3;
+                        std::cout << "\nLeft";
+                    }
+                    p1.mSprite.setTextureRect(IntRect(128*int(Frame), 0, 128, 128));
+                    getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
+                    //mSprite.move(-speed*time, 0);
+                }
+                if(event.key.code == Keyboard::Up) {
+                    p1.dir = 3; p1.speed = 1;
+                    Frame += 0.031*time;
+                    if(Frame > 7) {
+                        std::cout << "\nUp";
+                        Frame -= 3;
+                    }
+                    p1.mSprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
+                    getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
+                    //mSprite.move(0, -speed*time);
+                }
+                if(event.key.code == Keyboard::Down) {
+                    p1.dir = 2; p1.speed = 1;
+                    Frame += 0.031*time;
+                    if(Frame > 7) {
+                        std::cout << "\nDown";
+                        Frame -= 3;
+                    }
+                    p1.mSprite.setTextureRect(IntRect(128*int(Frame), 768, 128, 128));
+                    getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
+                    //mSprite.move(0, speed*time);
+                }
+                if(event.key.code == Keyboard::LAlt) {
+                    view.zoom(1.0900f);
+                    std::cout << "\n-zoom";
+                }
+                if(event.key.code == Keyboard::LControl) {
+                    view.zoom(0.9100f);
+                    std::cout << "\n+Zoom";
+                }
+            }
         }
         
-        // клавиатура
-        if (event.type == Event::KeyPressed && p1.life == true)
-        {
-            if(event.key.code == Keyboard::Right) {
-                p1.dir = 0; p1.speed = 0.5;
-                Frame += 0.031*time;
-                if(Frame > 7) {
-                    std::cout << "\nRight";
-                    Frame -= 3;
-                }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(speed*time, 0);
-            }
-            if(event.key.code == Keyboard::Left) {
-                p1.dir = 1; p1.speed = 0.5;
-                Frame += 0.031*time;
-                if(Frame > 7) {
-                    Frame -= 3;
-                    std::cout << "\nLeft";
-                }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 0, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(-speed*time, 0);
-            }
-            if(event.key.code == Keyboard::Up) {
-                p1.dir = 3; p1.speed = 0.5;
-                Frame += 0.031*time;
-                if(Frame > 7) {
-                    std::cout << "\nUp";
-                    Frame -= 3;
-                }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(0, -speed*time);
-            }
-            if(event.key.code == Keyboard::Down) {
-                p1.dir = 2; p1.speed = 0.5;
-                Frame += 0.031*time;
-                if(Frame > 7) {
-                    std::cout << "\nDown";
-                    Frame -= 3;
-                }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 768, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(0, speed*time);
-            }
-            if(event.key.code == Keyboard::LAlt) {
-                view.zoom(1.0005f);
-                std::cout << "\n-zoom";
-            }
-            if(event.key.code == Keyboard::LControl) {
-                view.zoom(0.9995f);
-                std::cout << "\n+Zoom";
-            }
-        }
+        
         p1.update(time);
+        
+        window.setView(view);
+        window.clear();
         
         // мышка
         //if(Mouse::isButtonPressed(Mouse::Right)) {
@@ -242,8 +288,6 @@ int main()
            // mSprite.setPosition(111, 122);
        // }
         
-
-        window.clear(Color(128, 106, 89));
         
         // RISUNOK MAP
         for(int i = 0; i < HEIGHT_MAP; i++) {
@@ -272,24 +316,28 @@ int main()
                 
                 window.draw(sMap);
             }
-            
         }
         
+        if (!showMissionText) {
+            text.setPosition(view.getCenter().x + 125, view.getCenter().y - 130);
+            sMission.setPosition(view.getCenter().x + 115, view.getCenter().y - 130);
+            window.draw(sMission); window.draw(text);
+        }
         
         // text
         ostringstream playerScoreString;
         ostringstream playerHealthString;
         playerScoreString << p1.playerScore;
         playerHealthString << p1.health;
-        text.setString("Points: " + playerScoreString.str());
-        text.setPosition(view.getCenter().x-300, view.getCenter().y-220);
+        textPoints.setString("Points: " + playerScoreString.str());
+        textPoints.setPosition(view.getCenter().x-300, view.getCenter().y-220);
         textHP.setString("Health: " + playerHealthString.str());
         textHP.setPosition(view.getCenter().x-300, view.getCenter().y-190);
         
         window.draw(text);
+        window.draw(textPoints);
         window.draw(textHP);
         window.draw(p1.mSprite);
-        window.setView(view);
         window.display();
     }
 
