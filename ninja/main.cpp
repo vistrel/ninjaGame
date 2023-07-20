@@ -8,8 +8,8 @@ using namespace sf;
 using namespace std;
 
 class Player {
-private: float x, y = 0;
 public:
+    float x, y = 0;
     float speed = 0, w1, h1, w2, h2, dx, dy;
     int countStone;
     int dir; int playerScore; int health;
@@ -188,6 +188,9 @@ int main()
     Clock clock;
     float Frame = 0;
     
+    bool isMove = false;
+    float dX = 0; float dY = 0;
+    
     while (window.isOpen())
     {
         float time = clock.getElapsedTime().asMicroseconds();
@@ -196,11 +199,38 @@ int main()
         
         if(!p1.life) { view.zoom(0.99992); }
         
+        Vector2i pixelPos = Mouse::getPosition(window);
+        Vector2f pos = window.mapPixelToCoords(pixelPos);
+        cout << pixelPos.x << "\n";
+        cout << pos.x << "\n";
+        
         Event event;
         while (window.pollEvent(event))
         {
             if (event.type == Event::Closed)
                 window.close();
+            
+            // мышка
+            if (event.type == Event::MouseButtonPressed) {
+                if(Mouse::isButtonPressed(Mouse::Left)) {
+                    if (p1.mSprite.getGlobalBounds().contains(pos.x, pos.y)) {
+                        cout << "\nclick";
+                        dX = pos.x - p1.mSprite.getPosition().x;
+                        dY = pos.y - p1.mSprite.getPosition().y;
+                        isMove = true;
+                    }
+                }
+            }
+            if (event.type == Event::MouseButtonReleased) { //если отпустили клавишу
+                if (event.key.code == Mouse::Left) //а именно левую
+                    isMove = false; //то не можем двигать спрайт
+                    p1.mSprite.setColor(Color::White);//и даем ему прежний цвет
+            }
+            if (isMove) {
+                p1.mSprite.setColor(Color::Red);
+                p1.x = pos.x - dX;
+                p1.y = pos.y - dY;
+            }
             
             
             // клавиатура
@@ -286,12 +316,6 @@ int main()
         
         window.setView(view);
         window.clear();
-        
-        // мышка
-        //if(Mouse::isButtonPressed(Mouse::Right)) {
-          //  mSprite.setColor(Color::Red);
-           // mSprite.setPosition(111, 122);
-       // }
         
         
         // RISUNOK MAP
