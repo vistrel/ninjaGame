@@ -11,6 +11,7 @@ class Player {
 private: float x, y = 0;
 public:
     float speed = 0, w1, h1, w2, h2, dx, dy;
+    int countStone;
     int dir; int playerScore; int health;
     bool life;
     String File;
@@ -18,6 +19,7 @@ public:
     Texture mTexture;
     Sprite mSprite;
     Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
+        // Конструктор класса Player, инициализирует переменные и загружает текстуры
         dir = 0; playerScore = 0; health = 100;
         life = true;
         File = F;
@@ -32,6 +34,7 @@ public:
         mSprite.setTextureRect(IntRect(w1, h1, w2, h2));
     }
     void update(float time) {
+        // Метод обновления положения игрока
         switch (dir) {
             case 0:
                 dx = speed; dy = 0; break;
@@ -89,6 +92,8 @@ public:
      
                     if (TileMap[i][j] == 's') { //если символ равен 's' (камень)
                         playerScore++;
+                        randomMapGenerate(countStone = 1);
+                        
                         TileMap[i][j] = ' '; //убираем камень
                     }
                     if (TileMap[i][j] == 'f') { //если символ равен 'h' (камень)
@@ -110,6 +115,7 @@ int main()
     RenderWindow window(VideoMode(1280, 720), L"Беговой Бибиджон!");
     view.reset(FloatRect(0, 0, 640, 480));
     
+    randomMapGenerate(countStone);
     
     // text
     Font font;
@@ -212,7 +218,6 @@ int main()
                 }
                 
                 if(event.key.code == Keyboard::Tab) {
-                    
                     switch (showMissionText) {
                         case true: {
                             ostringstream task;
