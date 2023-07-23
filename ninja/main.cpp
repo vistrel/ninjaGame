@@ -20,7 +20,7 @@ Texture mTexture;
 Sprite mSprite;
 Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
     // Конструктор класса Player, инициализирует переменные и загружает текстуры
-    dir = 0; playerScore = 0; health = 100;
+    dir = 0; playerScore = 0; health = 100; dx = 0; dy = 0;
     life = true; isMove = false; onGround = false;
     File = F;
     w1 = W1;
@@ -32,14 +32,15 @@ Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
     mSprite.setTexture(mTexture);
     x = X; y = Y;
     mSprite.setTextureRect(IntRect(w1, h1, w2, h2));
+    mSprite.setOrigin(w2/2, h2/2);
 }
 void update(float time) {
     // Метод обновления положения игрока
     switch (dir) {
         case 0:
-            dx = speed; dy = 0; break;
+            dx = speed; break;
         case 1:
-            dx = -speed; dy = 0; break;
+            dx = -speed; break;
         case 2:
             dx = 0; break;
         case 3:
@@ -57,8 +58,10 @@ void update(float time) {
     mSprite.setPosition(x+w2/2, y+h2/2);
     if(health <= 0) { life = false; }
     if(!isMove) { speed = 0; }
-    if(isMove) { speed = 0.1; }
-    if(!onGround) { dy = dy + 0.0002*time; }
+    if (dy == 0 && onGround) {
+            dy = 0; // Сбрасываем значение dy на ноль, если персонаж находится на земле и не прыгает
+        }
+    if(!onGround) { dy = dy + 0.00002*time; checkCollisionWithMap(0, dy); }
     if(life) { getPlayerCoordinateForView(x, y); }
 }
 
@@ -158,12 +161,12 @@ sMission.setScale(0.6f, 0.6f);
 
 Player p1("anima.png", 200, 340, 128, 768, 128, 128);
 
-bool showMissionText = true;
-
+bool showMissionText = true; bool isMove = false;
+bool keys[4] = {false, false, false, false};
+    
 Clock clock;
 float Frame = 0;
 
-bool isMove = false;
 float dX = 0; float dY = 0;
 
 while (window.isOpen())
@@ -184,6 +187,29 @@ while (window.isOpen())
     {
         if (event.type == Event::Closed)
             window.close();
+        
+        // Обработка событий клавиатуры
+        if (event.type == Event::KeyPressed) {
+                    if (event.key.code == Keyboard::Right)
+                        keys[0] = true;
+                    else if (event.key.code == Keyboard::Left)
+                        keys[1] = true;
+                    else if (event.key.code == Keyboard::Up)
+                        keys[2] = true;
+                    else if (event.key.code == Keyboard::Down)
+                        keys[3] = true;
+                }
+        else if (event.type == Event::KeyReleased){
+                    if (event.key.code == Keyboard::Right)
+                        keys[0] = false;
+                    else if (event.key.code == Keyboard::Left)
+                        keys[1] = false;
+                    else if (event.key.code == Keyboard::Up)
+                        keys[2] = false;
+                    else if (event.key.code == Keyboard::Down)
+                        keys[3] = false;
+                }
+        
         
         // мышка
         if (event.type == Event::MouseButtonPressed) {
@@ -209,20 +235,19 @@ while (window.isOpen())
         
         
         // клавиатура
-        if (event.type == Event::KeyPressed && p1.life == true) {
-            if (event.key.code == Keyboard::Right) {
-                    p1.dir = 0;
-                p1.isMove = true;
-                    p1.speed = 1;
-                    Frame += 0.031 * time;
-                    if (Frame > 7) {
-                        std::cout << "\nRight";
-                        Frame -= 3;
-                    }
-                    p1.mSprite.setTextureRect(IntRect(128 * int(Frame), 512, 128, 128));
-                    //getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY()); // Не уверен, зачем это здесь
-                    //mSprite.move(speed * time, 0); // Не уверен, зачем это здесь
+        if (p1.life == true) {
+            if(keys[0]) {
+                p1.dir = 0; p1.speed = 1;
+                Frame += 0.031*time;
+                if(Frame > 7) {
+                    std::cout << "\nRight";
+                    Frame -= 3;
                 }
+                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
+                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
+                //mSprite.move(speed*time, 0);
+            }
+            
             if(event.key.code == Keyboard::Tab) {
                 switch (showMissionText) {
                     case true: {
@@ -243,7 +268,7 @@ while (window.isOpen())
                 
             }
             
-            if(event.key.code == Keyboard::Left) {
+            if(keys[1]) {
                 p1.dir = 1; p1.speed = 1;
                 Frame += 0.031*time;
                 if(Frame > 7) {
@@ -254,19 +279,19 @@ while (window.isOpen())
                 getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
                 //mSprite.move(-speed*time, 0);
             }
-            if((event.key.code == Keyboard::Up) && (p1.onGround)) {
+            if(keys[2] && p1.onGround) {
                 cout << "up";
-                p1.dir = 3; p1.speed = 1; p1.dy = -0.3; p1.onGround = false;
-                /*Frame += 0.031*time;
+                p1.dir = 3; p1.speed = 1; p1.dy = -0.09; p1.onGround = false;
+                Frame += 0.031*time;
                 if(Frame > 7) {
                     std::cout << "\nUp";
                     Frame -= 3;
-                }*/
-                //p1.mSprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
+                }
+                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
                 getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
                 //mSprite.move(0, -speed*time);
             }
-            if(event.key.code == Keyboard::Down) {
+            if(keys[3]) {
                 p1.dir = 2; p1.speed = 1;
                 Frame += 0.031*time;
                 if(Frame > 7) {
@@ -284,12 +309,6 @@ while (window.isOpen())
             if(event.key.code == Keyboard::LControl) {
                 view.zoom(0.9100f);
                 std::cout << "\n+Zoom";
-            }
-        }
-        if (event.type == Event::KeyReleased && p1.life == true) {
-            if (event.key.code == Keyboard::Right || event.key.code == Keyboard::Left) {
-                p1.isMove = false; // Сбрасываем флаг движения при отпускании клавиш
-                // Остальной код без изменений
             }
         }
     }
