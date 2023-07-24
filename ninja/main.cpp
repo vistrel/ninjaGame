@@ -7,6 +7,24 @@
 using namespace sf;
 using namespace std;
 
+class Entity {
+public:
+    float dx, dy, x, y, speed, moveTimer;
+    int w, h, health;
+    bool life, onGround, isMove;
+    Texture texture;
+    Sprite sprite;
+    String name;
+    Entity(Image &image, float X, float Y, int W, int H, String Name) {
+        x = X; y = Y; w = W; h = H; name = Name; moveTimer = 0;
+        speed = 0; health = 100; dx = 0; dy = 0;
+        life = true; onGround = false;  isMove = false;
+        texture.loadFromImage(image);
+        sprite.setTexture(texture);
+        sprite.setOrigin(w / 2, h / 2);
+    }
+};
+
 class Player {
 public:
 float x, y = 0;
@@ -16,8 +34,8 @@ int dir; int playerScore; int health;
     bool life, isMove, onGround;
 String File;
 Image image;
-Texture mTexture;
-Sprite mSprite;
+Texture texture;
+Sprite sprite;
 Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
     // Конструктор класса Player, инициализирует переменные и загружает текстуры
     dir = 0; playerScore = 0; health = 100; dx = 0; dy = 0;
@@ -28,11 +46,12 @@ Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
     w2 = W2;
     h2 = H2;
     image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/" + File);
-    mTexture.loadFromImage(image);
-    mSprite.setTexture(mTexture);
+    texture.loadFromImage(image);
+    sprite.setTexture(texture);
+    
     x = X; y = Y;
-    mSprite.setTextureRect(IntRect(w1, h1, w2, h2));
-    mSprite.setOrigin(w2/2, h2/2);
+    sprite.setTextureRect(IntRect(w1, h1, w2, h2));
+    sprite.setOrigin(w2/2, h2/2);
 }
 void update(float time) {
     // Метод обновления положения игрока
@@ -55,7 +74,7 @@ void update(float time) {
     if (dy == 0) { // Приземлился
             onGround = true;
         }
-    mSprite.setPosition(x+w2/2, y+h2/2);
+    sprite.setPosition(x+w2/2, y+h2/2);
     if(health <= 0) { life = false; }
     if(!isMove) { speed = 0; }
     if (dy == 0 && onGround) {
@@ -123,8 +142,8 @@ Image map_image;
 map_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/map.png");
 Texture map;
 map.loadFromImage(map_image);
-Sprite sMap;
-sMap.setTexture(map);
+Sprite s_map;
+s_map.setTexture(map);
 
 // health
 Image health_image;
@@ -143,23 +162,23 @@ Sprite sStone;
 sStone.setTexture(tStone);
 
 // mission
-Image mission_image;
-mission_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/missionbg.jpg");
-mission_image.createMaskFromColor(Color(0, 0, 0));
-Texture tMission;
-tMission.loadFromImage(mission_image);
-Sprite sMission;
-sMission.setTexture(tMission);
-sMission.setTextureRect(IntRect(0, 0, 340, 510));
-sMission.setScale(0.6f, 0.6f);
+Image quest_image;
+quest_image.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/missionbg.jpg");
+quest_image.createMaskFromColor(Color(0, 0, 0));
+Texture quest_texture;
+quest_texture.loadFromImage(quest_image);
+Sprite s_quest;
+s_quest.setTexture(quest_texture);
+s_quest.setTextureRect(IntRect(0, 0, 340, 510));
+s_quest.setScale(0.6f, 0.6f);
 
 //Image icon;
 //icon.loadFromFile("image/ninja.png");
-//mSprite.setTextureRect(IntRect(0, 540, 128, 128));
-//mSprite.setPosition(30, 30);
+//sprite.setTextureRect(IntRect(0, 540, 128, 128));
+//sprite.setPosition(30, 30);
 //window.setIcon(32, 32, icon.getPixelsPtr());
 
-Player p1("anima.png", 200, 340, 128, 768, 128, 128);
+Player p("anima.png", 200, 340, 128, 768, 128, 128);
 
 bool showMissionText = true; bool isMove = false;
 bool keys[4] = {false, false, false, false};
@@ -175,7 +194,7 @@ while (window.isOpen())
     clock.restart();
     time = time/100;
     
-    if(!p1.life) { view.zoom(0.99992); }
+    if(!p.life) { view.zoom(0.99992); }
     
     Vector2i pixelPos = Mouse::getPosition(window);
     Vector2f pos = window.mapPixelToCoords(pixelPos);
@@ -199,7 +218,8 @@ while (window.isOpen())
                     else if (event.key.code == Keyboard::Down)
                         keys[3] = true;
                 }
-        else if (event.type == Event::KeyReleased){
+                else if (event.type == Event::KeyReleased)
+                {
                     if (event.key.code == Keyboard::Right)
                         keys[0] = false;
                     else if (event.key.code == Keyboard::Left)
@@ -212,12 +232,12 @@ while (window.isOpen())
         
         
         // мышка
-        if (event.type == Event::MouseButtonPressed) {
+        /*if (event.type == Event::MouseButtonPressed) {
             if(Mouse::isButtonPressed(Mouse::Left)) {
-                if (p1.mSprite.getGlobalBounds().contains(pos.x, pos.y)) {
+                if (p1.sprite.getGlobalBounds().contains(pos.x, pos.y)) {
                     cout << "\nclick";
-                    dX = pos.x - p1.mSprite.getPosition().x;
-                    dY = pos.y - p1.mSprite.getPosition().y;
+                    dX = pos.x - p1.sprite.getPosition().x;
+                    dY = pos.y - p1.sprite.getPosition().y;
                     isMove = true;
                 }
             }
@@ -225,37 +245,37 @@ while (window.isOpen())
         if (event.type == Event::MouseButtonReleased) { //если отпустили клавишу
             if (event.key.code == Mouse::Left) //а именно левую
                 isMove = false; //то не можем двигать спрайт
-            p1.mSprite.setColor(Color::White);//и даем ему прежний цвет
+            p1.sprite.setColor(Color::White);//и даем ему прежний цвет
         }
         if (isMove) {
-            p1.mSprite.setColor(Color::Red);
+            p1.sprite.setColor(Color::Red);
             p1.x = pos.x - dX;
             p1.y = pos.y - dY;
-        }
+        }*/
         
         
         // клавиатура
-        if (p1.life == true) {
+        if (p.life == true) {
             if(keys[0]) {
-                p1.dir = 0; p1.speed = 1;
+                p.dir = 0; p.speed = 1;
                 Frame += 0.031*time;
                 if(Frame > 7) {
                     std::cout << "\nRight";
                     Frame -= 3;
                 }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(speed*time, 0);
+                p.sprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
+                getPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
+                //sprite.move(speed*time, 0);
             }
             
             if(event.key.code == Keyboard::Tab) {
                 switch (showMissionText) {
                     case true: {
                         ostringstream task;
-                        task << getTextMission(getCurrentMission(p1.getPlayerCoordinateX()));
+                        task << getTextMission(getCurrentMission(p.getPlayerCoordinateX()));
                         text.setString(task.str());
                         text.setPosition(view.getCenter().x + 125, view.getCenter().y - 130);
-                        sMission.setPosition(view.getCenter().x + 115, view.getCenter().y - 130);
+                        s_quest.setPosition(view.getCenter().x + 115, view.getCenter().y - 130);
                         showMissionText = false;
                         break;
                     }
@@ -269,38 +289,38 @@ while (window.isOpen())
             }
             
             if(keys[1]) {
-                p1.dir = 1; p1.speed = 1;
+                p.dir = 1; p.speed = 1;
                 Frame += 0.031*time;
                 if(Frame > 7) {
                     Frame -= 3;
                     std::cout << "\nLeft";
                 }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 0, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(-speed*time, 0);
+                p.sprite.setTextureRect(IntRect(128*int(Frame), 0, 128, 128));
+                getPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
+                //sprite.move(-speed*time, 0);
             }
-            if(keys[2] && p1.onGround) {
+            if(keys[2] && p.onGround) {
                 cout << "up";
-                p1.dir = 3; p1.speed = 1; p1.dy = -0.09; p1.onGround = false;
+                p.dir = 3; p.speed = 1; p.dy = -0.09; p.onGround = false;
                 Frame += 0.031*time;
                 if(Frame > 7) {
                     std::cout << "\nUp";
                     Frame -= 3;
                 }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(0, -speed*time);
+                p.sprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
+                getPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
+                //sprite.move(0, -speed*time);
             }
             if(keys[3]) {
-                p1.dir = 2; p1.speed = 1;
+                p.dir = 2; p.speed = 1;
                 Frame += 0.031*time;
                 if(Frame > 7) {
                     std::cout << "\nDown";
                     Frame -= 3;
                 }
-                p1.mSprite.setTextureRect(IntRect(128*int(Frame), 768, 128, 128));
-                getPlayerCoordinateForView(p1.getPlayerCoordinateX(), p1.getPlayerCoordinateY());
-                //mSprite.move(0, speed*time);
+                p.sprite.setTextureRect(IntRect(128*int(Frame), 768, 128, 128));
+                getPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
+                //sprite.move(0, speed*time);
             }
             if(event.key.code == Keyboard::LAlt) {
                 view.zoom(1.0900f);
@@ -314,7 +334,7 @@ while (window.isOpen())
     }
     
     
-    p1.update(time);
+    p.update(time);
     
     window.setView(view);
     window.clear();
@@ -324,13 +344,13 @@ while (window.isOpen())
     for(int i = 0; i < HEIGHT_MAP; i++) {
         for (int j = 0; j < WIDTH_MAP; j++) {
             if (TileMap[i][j] == ' ') {
-                sMap.setTextureRect(IntRect(0, 0, 32, 32));
+                s_map.setTextureRect(IntRect(0, 0, 32, 32));
             }
             if (TileMap[i][j] == 's') {
-                sMap.setTextureRect(IntRect(32, 0, 32, 32));
+                s_map.setTextureRect(IntRect(32, 0, 32, 32));
             }
             if (TileMap[i][j] == '0') {
-                sMap.setTextureRect(IntRect(64, 0, 32, 32));
+                s_map.setTextureRect(IntRect(64, 0, 32, 32));
             }
             if (TileMap[i][j] == 'f') {
                 sStone.setTextureRect(IntRect(0, 0, 32, 32));
@@ -343,23 +363,23 @@ while (window.isOpen())
             
             sStone.setPosition(j*32, i*32);
             sHp.setPosition(j*32, i*32);
-            sMap.setPosition(j*32, i*32);
+            s_map.setPosition(j*32, i*32);
             
-            window.draw(sMap);
+            window.draw(s_map);
         }
     }
     
     if (!showMissionText) {
         text.setPosition(view.getCenter().x + 125, view.getCenter().y - 130);
-        sMission.setPosition(view.getCenter().x + 115, view.getCenter().y - 130);
-        window.draw(sMission); window.draw(text);
+        s_quest.setPosition(view.getCenter().x + 115, view.getCenter().y - 130);
+        window.draw(s_quest); window.draw(text);
     }
     
     // text
     ostringstream playerScoreString;
     ostringstream playerHealthString;
-    playerScoreString << p1.playerScore;
-    playerHealthString << p1.health;
+    playerScoreString << p.playerScore;
+    playerHealthString << p.health;
     textPoints.setString("Points: " + playerScoreString.str());
     textPoints.setPosition(view.getCenter().x-300, view.getCenter().y-220);
     textHP.setString("Health: " + playerHealthString.str());
@@ -368,7 +388,7 @@ while (window.isOpen())
     window.draw(text);
     window.draw(textPoints);
     window.draw(textHP);
-    window.draw(p1.mSprite);
+    window.draw(p.sprite);
     window.display();
 }
 
