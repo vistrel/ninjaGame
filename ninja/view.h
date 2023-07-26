@@ -14,7 +14,7 @@ using namespace sf;
 
 sf::View view;
 
-View getPlayerCoordinateForView(float x, float y) {
+View setPlayerCoordinateForView(float x, float y) {
     
     float tempX = x; float tempY = y;
     if(x < 320) {
