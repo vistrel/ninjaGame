@@ -11,7 +11,7 @@ using namespace std;
 class Entity {
 public:
     float dx, dy, x, y, speed, moveTimer;
-    int w1, h1, w2, h2, health;
+    int w, h, health;
     bool life, onGround, isMove;
     Texture texture;
     Sprite sprite;
@@ -23,7 +23,7 @@ public:
         life = true; onGround = false;  isMove = false;
         texture.loadFromImage(image);
         sprite.setTexture(texture);
-        sprite.setOrigin(w2 / 2, h2 / 2);
+        sprite.setOrigin(w / 2, h / 2);
     }
 };
 
@@ -33,10 +33,10 @@ int countStone;
 int dir;
 int playerScore;//эта переменная может быть только у игрока
  
-Player(Image &image, float X, float Y, int W2, int H2,String Name):Entity(image,X,Y,W2,H2,Name) {
+Player(Image &image, float X, float Y, int W, int H,String Name):Entity(image,X,Y,W,H,Name) {
     playerScore = 0; dir = 0;
            if (name == "Player1") {
-               sprite.setTextureRect(IntRect(128, 768, w2, h2));
+               sprite.setTextureRect(IntRect(4, 19, 40, 30));
            }
        }
 /*Player(String F, int X, int Y, float W1, float H1, float W2, float H2) {
@@ -55,6 +55,30 @@ Player(Image &image, float X, float Y, int W2, int H2,String Name):Entity(image,
     sprite.setTextureRect(IntRect(w1, h1, w2, h2));
     sprite.setOrigin(w2/2, h2/2);
 }*/
+    
+    void checkCollisionWithMap(float Dx, float Dy) {
+        for (int i = (y + Dy) / 32; i < (y + h + Dy) / 32; i++) {
+            for (int j = (x + Dx) / 32; j < (x + w + Dx) / 32; j++) {
+                if (TileMap[i][j] == '0') {
+                    if (Dy > 0) {
+                        onGround = true;
+                        y = i * 32 - h - 32;
+                        dy = 0;
+                    }
+                    if (Dy < 0) {
+                        y = i * 32 + 32;
+                        dy = 0;
+                    }
+                    if (Dx > 0) {
+                        x = j * 32 - w;
+                    }
+                    if (Dx < 0) {
+                        x = j * 32 + 32;
+                    }
+                } //else { onGround = false; }
+            }
+        }
+    }
     
 void update(float time) {
     // Метод обновления положения игрока
@@ -77,13 +101,19 @@ void update(float time) {
     if (dy == 0) { // Приземлился
             onGround = true;
         }
-    sprite.setPosition(x+w2/2, y+h2/2);
+    sprite.setPosition(x+w/2, y+h/2);
     if(health <= 0) { life = false; }
     if(!isMove) { speed = 0; }
     if (dy == 0 && onGround) {
             dy = 0; // Сбрасываем значение dy на ноль, если персонаж находится на земле и не прыгает
         }
-    if(!onGround) { checkCollisionWithMap(0, dy); dy = dy + 0.00002*time;  }
+    if (!onGround) {
+            // Если персонаж не на земле, то увеличиваем его скорость падения (гравитацию)
+            dy = dy + 0.00002 * time;
+        } else {
+            // Если персонаж на земле, то обнуляем скорость по оси Y
+            dy = 0;
+        }
     if(life) { setPlayerCoordinateForView(x, y); }
 }
 
@@ -93,58 +123,45 @@ float getPlayerCoordinateX() {
 float getPlayerCoordinateY() {
     return y;
 }
+};
 
+class Enemy :public Entity{
+public:
+    Enemy(Image &image, float X, float Y,int W, int H, String Name):Entity(image,X,Y,W,H,Name){
+        if (name == "EasyEnemy"){
+            sprite.setTextureRect(IntRect(0, 0, W, H));
+            dx = 0.01;//даем скорость.этот объект всегда двигается
+        }
+    }
+ 
     void checkCollisionWithMap(float Dx, float Dy) {
-        for (int i = (y + Dy) / 32; i < (y + h2 + Dy) / 32; i++) {
-            for (int j = (x + Dx) / 32; j < (x + w2 + Dx) / 32; j++) {
+        int startX = std::max(static_cast<int>(x + Dx) / 32, 0);
+        int startY = std::max(static_cast<int>(y + Dy) / 32, 0);
+        int endX = std::min(static_cast<int>((x + w + Dx) / 32), WIDTH_MAP - 1);
+        int endY = std::min(static_cast<int>((y + h + Dy) / 32), HEIGHT_MAP - 1);
+
+        for (int i = startY; i <= endY; i++) {
+            for (int j = startX; j <= endX; j++) {
                 if (TileMap[i][j] == '0') {
                     if (Dy > 0) {
-                        y = i * 32 - h2 - 72;
-                        dy = 0;
-                        onGround = true;
-                    }
-                    if (Dy < 0) {
+                        y = i * 32 - h;
+                    } else if (Dy < 0) {
                         y = i * 32 + 32;
-                        dy = 0;
                     }
                     if (Dx > 0) {
-                        x = j * 32 - w2;
-                    }
-                    if (Dx < 0) {
+                        x = j * 32 - w;
+                        dx = -0.05; // Изменяем направление движения влево
+                        sprite.scale(-1, 1); // Переворачиваем спрайт влево
+                    } else if (Dx < 0) {
                         x = j * 32 + 32;
+                        dx = 0.05; // Изменяем направление движения вправо
+                        sprite.scale(-1, 1); // Переворачиваем спрайт вправо
                     }
-                } else {
-                    onGround = false;
                 }
             }
         }
     }
 
-};
-
-class Enemy :public Entity{
-public:
-    Enemy(Image &image, float X, float Y,int W,int H,String Name):Entity(image,X,Y,W,H,Name){
-        if (name == "EasyEnemy"){
-            sprite.setTextureRect(IntRect(0, 0, w2, h2));
-            dx = 0.01;//даем скорость.этот объект всегда двигается
-        }
-    }
- 
-    void checkCollisionWithMap(float Dx, float Dy)//ф ция проверки столкновений с картой
-    {
-        for (int i = y / 32; i < (y + h2) / 32; i++)//проходимся по элементам карты
-        for (int j = x / 32; j<(x + w2) / 32; j++)
-        {
-            if (TileMap[i][j] == '0')//если элемент наш тайлик земли, то
-            {
-                if (Dy>0){ y = i * 32 - h2; }//по Y вниз=>идем в пол(стоим на месте) или падаем. В этот момент надо вытолкнуть персонажа и поставить его на землю, при этом говорим что мы на земле тем самым снова можем прыгать
-                if (Dy<0){ y = i * 32 + 32; }//столкновение с верхними краями карты(может и не пригодиться)
-                if (Dx>0){ x = j * 32 - w2; dx = -0.1; sprite.scale(-1, 1); }//с правым краем карты
-                if (Dx<0){ x = j * 32 + 32; dx = 0.1; sprite.scale(-1, 1); }// с левым краем карты
-            }
-        }
-    }
  
     void update(float time)
     {
@@ -152,8 +169,11 @@ public:
             
             //moveTimer += time;if (moveTimer>3000){ dx *= -1; moveTimer = 0; }//меняет направление примерно каждые 3 сек
             checkCollisionWithMap(dx, 0);//обрабатываем столкновение по Х
+            
             x += dx*time;
-            sprite.setPosition(x + w2 / 2, y + h2 / 2); //задаем позицию спрайта в место его центра
+            
+
+            sprite.setPosition(x + w / 2, y + h / 2); //задаем позицию спрайта в место его центра
             if (health <= 0){ life = false; }
         }
     }
@@ -224,9 +244,11 @@ s_quest.setTexture(quest_texture);
 s_quest.setTextureRect(IntRect(0, 0, 340, 510));
 s_quest.setScale(0.6f, 0.6f);
 
+    //игрок
 Image heroImage;
-heroImage.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/anima.png");
+heroImage.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/MilesTailsPrower.gif");
     
+    //враг
 Image easyEnemyImage;
 easyEnemyImage.loadFromFile("/Users/vladislav/Desktop/ninja/ninja/image/shamaich.png");
 easyEnemyImage.createMaskFromColor(Color(255, 0, 0));
@@ -238,8 +260,8 @@ easyEnemyImage.createMaskFromColor(Color(255, 0, 0));
 //sprite.setPosition(30, 30);
 //window.setIcon(32, 32, icon.getPixelsPtr());
 
-Player p(heroImage, 200, 500, 128, 128, "Player1");
-Enemy easyEnemy(easyEnemyImage, 850, 671,200,97,"EasyEnemy");//простой враг, объект класса врага
+Player p(heroImage, 900, 500, 40, 30, "Player1");
+Enemy easyEnemy(easyEnemyImage, 400, 500, 200, 97, "EasyEnemy");//простой враг, объект класса врага
     
 bool showMissionText = true; bool isMove = false;
 bool keys[4] = {false, false, false, false};
@@ -253,7 +275,7 @@ while (window.isOpen())
 {
     float time = clock.getElapsedTime().asMicroseconds();
     clock.restart();
-    time = time/100;
+    time = time/120;
     
     if(!p.life) { view.zoom(0.99992); }
     
@@ -269,27 +291,27 @@ while (window.isOpen())
             window.close();
         
         // Обработка событий клавиатуры
-        if (event.type == Event::KeyPressed) {
-                    if (event.key.code == Keyboard::Right)
-                        keys[0] = true;
-                    else if (event.key.code == Keyboard::Left)
-                        keys[1] = true;
-                    else if (event.key.code == Keyboard::Up)
-                        keys[2] = true;
-                    else if (event.key.code == Keyboard::Down)
-                        keys[3] = true;
-                }
-                else if (event.type == Event::KeyReleased)
-                {
-                    if (event.key.code == Keyboard::Right)
-                        keys[0] = false;
-                    else if (event.key.code == Keyboard::Left)
-                        keys[1] = false;
-                    else if (event.key.code == Keyboard::Up)
-                        keys[2] = false;
-                    else if (event.key.code == Keyboard::Down)
-                        keys[3] = false;
-                }
+            if (event.type == Event::KeyPressed) {
+                if (event.key.code == Keyboard::Right)
+                    keys[0] = true;
+                else if (event.key.code == Keyboard::Left)
+                    keys[1] = true;
+                else if (event.key.code == Keyboard::Up)
+                    keys[2] = true;
+                else if (event.key.code == Keyboard::Down)
+                    keys[3] = true;
+            }
+            else if (event.type == Event::KeyReleased)
+            {
+                if (event.key.code == Keyboard::Right)
+                    keys[0] = false;
+                else if (event.key.code == Keyboard::Left)
+                    keys[1] = false;
+                else if (event.key.code == Keyboard::Up)
+                    keys[2] = false;
+                else if (event.key.code == Keyboard::Down)
+                    keys[3] = false;
+            }
         
         
         // мышка
@@ -317,18 +339,24 @@ while (window.isOpen())
         
         // клавиатура
         if (p.life == true) {
-            if(keys[0]) {
-                p.dir = 0; p.speed = 0.1;
-                Frame += 0.003*time;
-                std::cout << "\nRight";
-                if(Frame > 7) {
-                    Frame -= 3;
+            // Перемещение персонажа
+    
+                if (keys[0]) {
+                    p.dir = 0; p.speed = 0.5;
                 }
-                p.sprite.setTextureRect(IntRect(128*int(Frame), 512, 128, 128));
-                setPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
-                //sprite.move(speed*time, 0);
-            }
-            
+                else if (keys[1]) {
+                    p.dir = 1; p.speed = 0.5;
+                }
+                else if (keys[2] && p.onGround) {
+                    p.dir = 3; p.speed = 0.5; p.dy = -0.08; p.onGround = false;
+                }
+                else if (keys[3]) {
+                    p.dir = 2; p.speed = 0.5;
+                }
+                else {
+                    // Если не нажата ни одна клавиша, останавливаем персонажа
+                    p.speed = 0;
+                }
             if(event.key.code == Keyboard::Tab) {
                 switch (showMissionText) {
                     case true: {
@@ -349,40 +377,7 @@ while (window.isOpen())
                 
             }
             
-            if(keys[1]) {
-                p.dir = 1; p.speed = 0.1;
-                Frame += 0.003*time;
-                if(Frame > 7) {
-                    Frame -= 3;
-                    std::cout << "\nLeft";
-                }
-                p.sprite.setTextureRect(IntRect(128*int(Frame), 0, 128, 128));
-                setPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
-                //sprite.move(-speed*time, 0);
-            }
-            if(keys[2] && p.onGround) {
-                cout << "up";
-                p.dir = 3; p.speed = 0.1; p.dy = -0.08; p.onGround = false;
-                Frame += 0.003*time;
-                if(Frame > 7) {
-                    std::cout << "\nUp";
-                    Frame -= 3;
-                }
-                p.sprite.setTextureRect(IntRect(128*int(Frame), 256, 128, 128));
-                setPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
-                //sprite.move(0, -speed*time);
-            }
-            if(keys[3]) {
-                p.dir = 2; p.speed = 0.1;
-                Frame += 0.003*time;
-                if(Frame > 7) {
-                    std::cout << "\nDown";
-                    Frame -= 3;
-                }
-                p.sprite.setTextureRect(IntRect(128*int(Frame), 768, 128, 128));
-                setPlayerCoordinateForView(p.getPlayerCoordinateX(), p.getPlayerCoordinateY());
-                //sprite.move(0, speed*time);
-            }
+            
             if(event.key.code == Keyboard::LAlt) {
                 view.zoom(1.0900f);
                 std::cout << "\n-zoom";
